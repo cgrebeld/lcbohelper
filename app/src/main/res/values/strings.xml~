@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">LCBOHelper</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="product_name">Enter Name</string>
+    <string name="title_activity_product_results">ProductResultsActivity</string>
+    <string name="connection_error">Connection Error</string>
+    <string name="xml_error">XML Error</string>
+    <string name="title_activity_product_detail">ProductDetailActivity</string>
+    
+
+</resources>

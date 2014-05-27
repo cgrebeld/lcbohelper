@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:layout_width="54dp"
+        android:layout_height="54dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:src="@drawable/default_storefront" />
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_alignBottom="@+id/productImage"
+        android:layout_toRightOf="@+id/productImage"
+        android:layout_marginLeft="60dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/locationName"
+            android:layout_alignParentTop="true"
+            android:layout_toRightOf="@+id/productImage"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:text="Toronto-Central Queen and Coxwell" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/locationAddress1"
+            android:layout_alignParentTop="true"
+            android:layout_toRightOf="@+id/productImage"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:text="1651 Queen St East" />
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1199 Availible"
+                android:id="@+id/locationQuantity"
+                android:layout_weight="1" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1km"
+                android:id="@+id/locationDistance"
+                android:layout_weight="0.75" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</RelativeLayout>
