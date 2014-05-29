@@ -187,6 +187,9 @@ public class ProductResultsActivity extends ActionBarActivity
         Bundle args = new Bundle();
         int maxResults = 40;
         String search = getIntent().getStringExtra("search");
+        //search = search.replaceAll("[^A-Za-z0-9 ]", "");
+        search = search.replaceAll("(^| )[^ ]*[^A-Za-z ][^ ]*(?=$| )", "");
+
         String url = null;
         try {
             url = String.format(
