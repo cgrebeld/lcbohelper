@@ -2,33 +2,32 @@ package com.tinystranger.lcbohelper.app;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.support.v4.app.FragmentActivity;
-import android.support.v7.app.ActionBarActivity;
-import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
-import android.widget.EditText;
+import android.widget.Button;
 import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesClient;
 import com.google.android.gms.location.LocationClient;
 
+import com.google.zxing.integration.android.IntentResult;
+import com.google.zxing.integration.android.IntentIntegrator;
+
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -36,12 +35,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
-public class MainActivity extends FragmentActivity
+public class MainActivity extends FragmentActivity implements View.OnClickListener
 {
     private LocationClient mLocationClient = null;
     public static Location mCurrentLocation = null;
     public static List<LCBOEntity> stores = null;
-
+    static Bitmap defaultThumbnail = null;
 
     class CompletionFetcher
     {
@@ -165,6 +164,9 @@ public class MainActivity extends FragmentActivity
             }
         });
 
+        final Button scanBtn = (Button)findViewById(R.id.buttonScanBarcode);
+        scanBtn.setOnClickListener(this);
+
         mLocationClient = new LocationClient(getApplicationContext(),
                 new GooglePlayServicesClient.ConnectionCallbacks() {
                         @Override
@@ -210,6 +212,14 @@ public class MainActivity extends FragmentActivity
         }
     }
 
+    @Override
+    public void onClick(View v) {
+        if(v.getId() == R.id.buttonScanBarcode) {
+            IntentIntegrator scanIntegrator = new IntentIntegrator(this);
+            scanIntegrator.initiateScan();
+        }
+    }
+
     /*
      * Called when the Activity becomes visible.
      */
@@ -228,5 +238,29 @@ public class MainActivity extends FragmentActivity
         // Disconnecting the client invalidates it.
         mLocationClient.disconnect();
         super.onStop();
+    }
+
+    public void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        IntentResult scanningResult = IntentIntegrator.parseActivityResult(requestCode, resultCode, intent);
+        if (scanningResult != null) {
+            //we have a result
+            String scanContent = scanningResult.getContents();
+            String scanFormat = scanningResult.getFormatName();
+            Toast toast = Toast.makeText(getApplicationContext(),
+                    scanFormat + ":" + scanContent, Toast.LENGTH_SHORT);
+            toast.show();
+            Log.d("scan",scanFormat + ":" + scanContent );
+            // UPC_A:876153000026
+            LCBOEntity item = new LCBOEntity();
+            item.itemNumber = scanContent;
+            ProductDetailActivity.lastResult = item;
+            if (null == defaultThumbnail) {
+                defaultThumbnail = BitmapFactory.decodeResource(getResources(),
+                        R.drawable.default_thumbnail);
+            }
+            ProductDetailActivity.lastBitmap = defaultThumbnail;
+            Intent i = new Intent(getApplicationContext(),ProductDetailActivity.class);
+            startActivity(i);
+        }
     }
 }

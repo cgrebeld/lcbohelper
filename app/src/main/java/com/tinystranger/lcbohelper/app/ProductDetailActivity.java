@@ -1,5 +1,7 @@
 package com.tinystranger.lcbohelper.app;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -59,15 +61,16 @@ public class ProductDetailActivity extends ActionBarActivity
         }
         private Bitmap fetchThumbnail(String productNumber)
         {
-            String url = String.format(
-                    "http://lcbo.com/app/images/products/thumbs/%07d.jpg"
-                    , Integer.parseInt(productNumber));
             Bitmap bm = null;
             try {
+                String url = String.format(
+                    "http://lcbo.com/app/images/products/thumbs/%07d.jpg"
+                    , Integer.parseInt(productNumber));
                 bm = BitmapFactory.decodeStream(new URL(url).openConnection().getInputStream());
             } catch (FileNotFoundException e) {
                 // pass
-            }catch (IOException e) {
+            } catch (NumberFormatException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
             return bm;
@@ -172,6 +175,19 @@ public class ProductDetailActivity extends ActionBarActivity
         loaded = true;
         if (data.size() > 0)
             lastResult = data.get(0);
+        else
+        {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage("No matching products found!")
+                    .setTitle("Sorry");
+            builder.setNeutralButton("Ok", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    ProductDetailActivity.this.finish();
+                }
+            });
+            builder.show();
+        }
         updateData();
 
     }
