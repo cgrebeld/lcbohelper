@@ -22,19 +22,8 @@
         android:orientation="vertical"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/linearLayout">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Find Products by Name"
-            android:id="@+id/textView"
-            android:layout_alignParentLeft="true"
-            android:layout_marginLeft="0dp"
-            android:layout_alignParentTop="true"
-            android:layout_marginTop="0dp"
-            android:layout_weight="3" />
+        android:id="@+id/linearLayout"
+        android:layout_marginRight="@dimen/activity_horizontal_margin">
 
         <AutoCompleteTextView
             android:layout_width="fill_parent"
@@ -42,13 +31,13 @@
             android:id="@+id/productSearchEditText"
             android:layout_weight="2"
             android:singleLine="true"
-            android:hint="@string/product_name"
+            android:hint="Search by name"
             android:imeOptions="actionSearch"
             android:inputType="text"
             android:completionThreshold="2" />
 
         <Button
-            android:layout_width="wrap_content"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:text="Search"
             android:id="@+id/button"
@@ -57,11 +46,10 @@
             android:layout_weight="1" />
 
         <Button
-            android:layout_width="wrap_content"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:text="Scan a Barcode"
-            android:id="@+id/buttonScanBarcode"
-            android:layout_marginTop="20dp" />
+            android:id="@+id/buttonScanBarcode" />
 
     </LinearLayout>
 
