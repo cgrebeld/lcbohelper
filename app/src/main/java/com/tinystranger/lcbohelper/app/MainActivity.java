@@ -246,9 +246,9 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
             //we have a result
             String scanContent = scanningResult.getContents();
             String scanFormat = scanningResult.getFormatName();
-            Toast toast = Toast.makeText(getApplicationContext(),
-                    scanFormat + ":" + scanContent, Toast.LENGTH_SHORT);
-            toast.show();
+            //Toast toast = Toast.makeText(getApplicationContext(),
+            //        scanFormat + ":" + scanContent, Toast.LENGTH_SHORT);
+            //toast.show();
             Log.d("scan",scanFormat + ":" + scanContent );
             // UPC_A:876153000026
             LCBOEntity item = new LCBOEntity();
