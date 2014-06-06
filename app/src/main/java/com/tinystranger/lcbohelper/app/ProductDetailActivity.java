@@ -10,11 +10,14 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.os.Bundle;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.widget.ShareActionProvider;
 import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
@@ -32,6 +35,7 @@ public class ProductDetailActivity extends ActionBarActivity
         implements LoaderManager.LoaderCallbacks<List<LCBOEntity>>{
 
     ProgressBar spinner;
+    private ShareActionProvider mShareActionProvider;
 
     class BitmapWorkerTask extends AsyncTask<String, Void, Bitmap> {
         ProductDetailActivity activity;
@@ -241,5 +245,30 @@ public class ProductDetailActivity extends ActionBarActivity
             txt.setText(Html.fromHtml(lastResult.itemDescription));
         }
 
+    }
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu items for use in the action bar
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.product_detail, menu);
+        // Get the menu item.
+        MenuItem menuItem = menu.findItem(R.id.action_share);
+        // Get the provider and hold onto it to set/change the share intent.
+        mShareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(menuItem);
+        mShareActionProvider.setShareIntent(getDefaultIntent());
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    /** Defines a default (dummy) share intent to initialize the action provider.
+     * However, as soon as the actual content to be used in the intent
+     * is known or changes, you must update the share intent by again calling
+     * mShareActionProvider.setShareIntent()
+     */
+    private Intent getDefaultIntent() {
+        String shareBody = lastResult.itemName + "\n\n" + String.format("http://www.lcbo.com/lcbo-ear/lcbo/product/details.do?language=EN&itemNumber=%s", lastResult.itemNumber);
+        Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
+        sharingIntent.setType("text/plain");
+        sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "I found this with the LCBO Helper Android");
+        sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody);
+        return sharingIntent;
     }
 }
