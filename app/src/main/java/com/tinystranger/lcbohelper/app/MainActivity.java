@@ -152,7 +152,9 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         setContentView(R.layout.fragment_main);
 
         final AutoCompleteTextView editText = (AutoCompleteTextView) findViewById(R.id.productSearchEditText);
-        editText.setAdapter(new AutoCompleteAdapter(this, android.R.layout.simple_dropdown_item_1line));
+        // Doesn't work anymore
+        //editText.setAdapter(new AutoCompleteAdapter(this, android.R.layout.simple_dropdown_item_1line));
+        //
         editText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {

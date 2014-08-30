@@ -9,9 +9,14 @@ public class LCBOEntity {
     public String itemNumber;
     public String itemName;
     public String productSize;
-    public String stockType;
+    public String stock_type;
+    public String primary_category;
+    public String secondary_category;
+    public String tertiary_category;
     public String price;
+    public String regularPrice;
     public Number priceNumber;
+    public Number regularPriceNumber;
     public int productQuantity;
     public String wineStyle;
     public String itemDescription;
@@ -47,4 +52,7 @@ public class LCBOEntity {
     public String saturdayOpenHour;
     public String phoneNumber1;
     public String phoneAreaCode;
+    public String image_thumb_url;
+    public String image_url;
+    public String serving_suggestion;
 }

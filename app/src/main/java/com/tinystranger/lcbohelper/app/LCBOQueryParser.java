@@ -182,7 +182,7 @@ public class LCBOQueryParser {
             else if (qName.equalsIgnoreCase("productSize"))
                 entries.get(entries.size()-1).productSize = text;
             else if (qName.equalsIgnoreCase("stockType"))
-                entries.get(entries.size()-1).stockType = text;
+                entries.get(entries.size()-1).stock_type = text;
             else if (qName.equalsIgnoreCase("price")) {
                 try {
                     NumberFormat numberFormat = NumberFormat.getCurrencyInstance(Locale.CANADA);

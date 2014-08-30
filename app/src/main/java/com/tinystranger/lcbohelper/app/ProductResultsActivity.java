@@ -6,6 +6,9 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
@@ -19,9 +22,11 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import java.io.FileNotFoundException;
@@ -59,7 +64,7 @@ public class ProductResultsActivity extends ActionBarActivity
         @Override
         public View getView(int position, View convertView, ViewGroup parent)
         {
-            Log.d("db", "getView " + position);
+            //Log.d("db", "getView " + position);
             LayoutInflater inflater = getLayoutInflater();
             View row = inflater.inflate(R.layout.product_result_row,
                     parent, false);
@@ -67,13 +72,14 @@ public class ProductResultsActivity extends ActionBarActivity
             LCBOEntity item = getItem(position);
             ImageView view = (ImageView)row.findViewById(R.id.productImage);
             if (!thumbnailCache.containsKey(item.itemNumber)) {
-                BitmapWorkerTask task = new BitmapWorkerTask(activity, item.itemNumber, position);
+                BitmapWorkerTask task = new BitmapWorkerTask(activity, item, position);
                 task.execute(item.itemNumber);
                 //activity.tasks.add(task);
                 view.setImageBitmap(defaultThumbnail);
-            } else
+            } else {
                 view.setImageBitmap(thumbnailCache.get(item.itemNumber));
-
+                scaleImage(view);
+            }
             TextView txt = (TextView) row.findViewById(R.id.productName);
             txt.setText(item.itemName);
             txt = (TextView) row.findViewById(R.id.quantity);
@@ -88,12 +94,12 @@ public class ProductResultsActivity extends ActionBarActivity
 
     class BitmapWorkerTask extends AsyncTask<String, Void, Bitmap> {
         ProductResultsActivity activity;
-        String itemNumber;
+        LCBOEntity item;
         int position;
 
-        public BitmapWorkerTask(ProductResultsActivity aActivity, String aItemNumber, int position) {
+        public BitmapWorkerTask(ProductResultsActivity aActivity, LCBOEntity aItem, int position) {
             activity = aActivity;
-            itemNumber = aItemNumber;
+            item = aItem;
             this.position = position;
         }
 
@@ -105,7 +111,7 @@ public class ProductResultsActivity extends ActionBarActivity
                 try {
                     bitmapDownloadSemaphore.acquire();
                     Log.d("db", "Fetch " + params[0]);
-                    bm = fetchThumbnail(params[0]);
+                    bm = fetchThumbnail(item);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 } finally {
@@ -126,10 +132,11 @@ public class ProductResultsActivity extends ActionBarActivity
                 if (view != null) {
                     if (bitmap != null) {
                         view.setImageBitmap(bitmap);
-                        thumbnailCache.put(itemNumber, bitmap);
+                        scaleImage(view);
+                        thumbnailCache.put(item.itemNumber, bitmap);
                         Log.d("db", "Fetch ok");
                     } else {
-                        thumbnailCache.put(itemNumber, defaultThumbnail);
+                        thumbnailCache.put(item.itemNumber, defaultThumbnail);
                     }
                 }
             }
@@ -193,8 +200,10 @@ public class ProductResultsActivity extends ActionBarActivity
         String url = null;
         try {
             url = String.format(
-                    "http://stage.lcbo.com/lcbo-webapp/productsearch.do?itemKeyword=%s&numProducts=%d"
-            , URLEncoder.encode(search, "UTF-8"), maxResults);
+                    "http://lcboapi.com/products?q=%s"
+//                    "http://stage.lcbo.com/lcbo-webapp/productsearch.do?itemKeyword=%s&numProducts=%d"
+//            , URLEncoder.encode(search, "UTF-8"), maxResults);
+              , URLEncoder.encode(search, "UTF-8"));
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
@@ -208,9 +217,9 @@ public class ProductResultsActivity extends ActionBarActivity
     }
 
     // Called when a new Loader needs to be created
-    public LCBOXmlLoader onCreateLoader(int id, Bundle args) {
-
-        return new LCBOXmlLoader(this, args, LCBOQueryParser.QueryType.kProducts);
+    public Loader<List<LCBOEntity>> onCreateLoader(int id, Bundle args) {
+          return new LCBOAPILoader(this, args, LCBOAPIParser.QueryType.kProducts);
+//        return new LCBOXmlLoader(this, args, LCBOQueryParser.QueryType.kProducts);
     }
 
     public class CustomComparator implements Comparator<LCBOEntity> {
@@ -251,11 +260,16 @@ public class ProductResultsActivity extends ActionBarActivity
         }
     }
 
-    private Bitmap fetchThumbnail(String productNumber)
+    private Bitmap fetchThumbnail(LCBOEntity aEntity)
     {
-        String url = String.format(
-                "http://lcbo.com/assets/products/40x40/%07d.jpg"
-                , Integer.parseInt(productNumber));
+        String url;
+        if (aEntity.image_thumb_url == null) {
+            url = String.format(
+                    "http://lcbo.com/assets/products/40x40/%07d.jpg"
+                    , Integer.parseInt(aEntity.itemNumber));
+        } else {
+            url = aEntity.image_thumb_url;
+        }
         Bitmap bm = null;
         try {
             URLConnection connection = new URL(url).openConnection();
@@ -269,16 +283,38 @@ public class ProductResultsActivity extends ActionBarActivity
         }
         return bm;
     }
-    private void setResultThumbnail(int position, Bitmap bm)
+
+    private void scaleImage(ImageView view)
     {
-        ListView lv = (ListView)findViewById(R.id.productResultListView);
-        if (position < lv.getCount()) {
-            View row = lv.getChildAt(position);
-            if (row != null) {
-                ImageView view = (ImageView) row.findViewById(R.id.productImage);
-                view.setImageBitmap(bm);
-            }
+        Drawable drawing = view.getDrawable();
+        if (drawing == null) {
+            return;
         }
+        Bitmap bitmap = ((BitmapDrawable)drawing).getBitmap();
+
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+        int bounding_x = 54;
+        int bounding_y = 54;
+
+        float xScale = ((float) bounding_x) / width;
+        float yScale = ((float) bounding_y) / height;
+
+        Matrix matrix = new Matrix();
+        matrix.postScale(xScale, yScale);
+
+        Bitmap scaledBitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height, matrix, true);
+        width = scaledBitmap.getWidth();
+        height = scaledBitmap.getHeight();
+        BitmapDrawable result = new BitmapDrawable(getResources(), scaledBitmap);
+
+        view.setImageDrawable(result);
+/*
+        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) view.getLayoutParams();
+        params.width = width;
+        params.height = height;
+        view.setLayoutParams(params);
+*/
     }
 
     @Override

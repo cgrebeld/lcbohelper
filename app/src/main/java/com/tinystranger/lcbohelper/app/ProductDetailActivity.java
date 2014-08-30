@@ -5,6 +5,9 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.LoaderManager;
@@ -60,6 +63,8 @@ public class ProductDetailActivity extends ActionBarActivity
             if (view != null && bitmap != null) {
                 if (view != null) {
                     view.setImageBitmap(bitmap);
+                    scaleImage(view);
+                    //view.setOnClickListener(new ImageClickHandler(bitmap));
                 }
             }
         }
@@ -67,9 +72,16 @@ public class ProductDetailActivity extends ActionBarActivity
         {
             Bitmap bm = null;
             try {
-                String url = String.format(
-                    "http://lcbo.com/app/images/products/thumbs/%07d.jpg"
-                    , Integer.parseInt(productNumber));
+                String url;
+                if (activity.lastResult != null &&
+                        activity.lastResult.image_thumb_url != null)
+                {
+                    url = activity.lastResult.image_thumb_url;
+                } else {
+                    url = String.format(
+                            "http://lcbo.com/app/images/products/thumbs/%07d.jpg"
+                            , Integer.parseInt(productNumber));
+                }
                 bm = BitmapFactory.decodeStream(new URL(url).openConnection().getInputStream());
             } catch (FileNotFoundException e) {
                 // pass
@@ -78,6 +90,33 @@ public class ProductDetailActivity extends ActionBarActivity
                 e.printStackTrace();
             }
             return bm;
+        }
+
+        private void scaleImage(ImageView view)
+        {
+            Drawable drawing = view.getDrawable();
+            if (drawing == null) {
+                return;
+            }
+            Bitmap bitmap = ((BitmapDrawable)drawing).getBitmap();
+
+            int width = bitmap.getWidth();
+            int height = bitmap.getHeight();
+            int bounding_x = 240;
+            int bounding_y = 240;
+
+            float xScale = ((float) bounding_x) / width;
+            float yScale = ((float) bounding_y) / height;
+
+            Matrix matrix = new Matrix();
+            matrix.postScale(yScale, yScale);
+
+            Bitmap scaledBitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height, matrix, true);
+            width = scaledBitmap.getWidth();
+            height = scaledBitmap.getHeight();
+            BitmapDrawable result = new BitmapDrawable(getResources(), scaledBitmap);
+
+            view.setImageDrawable(result);
         }
     }
 
@@ -95,6 +134,8 @@ public class ProductDetailActivity extends ActionBarActivity
         if (view != null && lastBitmap != null) {
             view.setImageBitmap(lastBitmap);
         }
+
+        updateData();
 
         spinner = (ProgressBar)findViewById(R.id.storesProgressBar);
         spinner.setVisibility(View.GONE);
@@ -115,6 +156,8 @@ public class ProductDetailActivity extends ActionBarActivity
         Loader loader = getSupportLoaderManager().initLoader(0, args, this);
         // call forceLoad() to start processing
         loader.forceLoad();
+
+
     }
 
     // Launcher for location details
@@ -130,6 +173,27 @@ public class ProductDetailActivity extends ActionBarActivity
             LocationDetailActivity.location = entity;
             Intent i = new Intent(getApplicationContext(),LocationDetailActivity.class);
             startActivity(i);
+        }
+    };
+
+    // Launcher for location details
+    private class ImageClickHandler implements View.OnClickListener
+    {
+        Bitmap otherThumb;
+        ImageClickHandler(Bitmap bigThumb)
+        {
+            this.otherThumb = bigThumb;
+        }
+        @Override
+        public void onClick(View view) {
+            if (otherThumb != null) {
+                ImageView img = (ImageView) view;
+                Bitmap currentThumb = ((BitmapDrawable) img.getDrawable()).getBitmap();
+                img.setImageBitmap(otherThumb);
+                img.setMinimumWidth(Math.max(otherThumb.getWidth(), 143));
+                img.setMinimumHeight(Math.max(otherThumb.getHeight(), 127));
+                otherThumb = currentThumb;
+            }
         }
     };
 
@@ -192,8 +256,11 @@ public class ProductDetailActivity extends ActionBarActivity
             });
             builder.show();
         }
-        updateData();
 
+        // already updated with prior data
+        // updateData();
+
+        //AppRater.app_launched(getApplicationContext());
     }
 
     @Override
@@ -203,40 +270,63 @@ public class ProductDetailActivity extends ActionBarActivity
 
     void updateData()
     {
-        ImageView view = (ImageView)findViewById(R.id.detailImage);
-
         TextView txt = (TextView)findViewById(R.id.detailName);
         txt.setText(lastResult.itemName);
 
+        txt = (TextView) findViewById(R.id.detailProductNumber);
+        txt.setText( Html.fromHtml("<b>LCBO#</b> " + lastResult.itemNumber));
+
         txt = (TextView) findViewById(R.id.detailPrice);
-        txt.setText(lastResult.price);
+        if (lastResult.regularPrice != null && !lastResult.price.equalsIgnoreCase(lastResult.regularPrice)) {
+            txt.setText( Html.fromHtml("<b>" + lastResult.price + "</b> <i>WAS " + lastResult.regularPrice + "</i>"));
+
+        } else {
+            txt.setText( Html.fromHtml("<b>" + lastResult.price + "</b>"));
+        }
 
         txt = (TextView) findViewById(R.id.detailVolume);
         txt.setText(lastResult.productSize);
 
         txt = (TextView) findViewById(R.id.detailRegion);
         String region = "";
-        if (null != lastResult.producingRegion)
-            region += lastResult.producingRegion;
-        if (null != lastResult.producingCountry)
-            region += ", " + lastResult.producingCountry;
+        if (null != lastResult.producingRegion && !lastResult.producingRegion.equalsIgnoreCase("Region Not Specified"))
+            region = lastResult.producingRegion;
+        if (null != lastResult.producingCountry) {
+            if (region.length() > 0)
+                region += ", ";
+            region += lastResult.producingCountry;
+            region = region.replace(", Region Not Specified", "");
+        }
         if (region.length() != 0)
-            region = "From " + region;
-        txt.setText(region);
+            region = "<b>From</b> " + region;
+        txt.setText(Html.fromHtml(region));
 
         txt = (TextView) findViewById(R.id.detailStockType);
-        txt.setText("Stock Type is " + lastResult.stockType);
+        if (lastResult.wineVerietal != null && !lastResult.wineVerietal.isEmpty()) {
+            String s = "<b>Varietal</b> is " + lastResult.wineVerietal;
+            if (lastResult.stock_type != null && !lastResult.stock_type.equalsIgnoreCase("LCBO"))
+                s += " (" + lastResult.stock_type + ")";
+            txt.setText(Html.fromHtml(s));
+        } else {
+            txt.setText(lastResult.stock_type);
+            if (lastResult.primary_category != null)
+                txt.setText(txt.getText() + " . " + lastResult.primary_category);
+            if (lastResult.secondary_category != null)
+                txt.setText(txt.getText() + " . " + lastResult.secondary_category);
+            if (lastResult.tertiary_category != null)
+                txt.setText(txt.getText() + " . " + lastResult.tertiary_category);
+        }
 
         txt = (TextView) findViewById(R.id.detailSweetnessDescriptor);
         if (lastResult.sweetnessDescriptor != null)
-            txt.setText("Sweetness is " + lastResult.sweetnessDescriptor);
+            txt.setText( Html.fromHtml("<b>Sweetness</b> is " + lastResult.sweetnessDescriptor));
         else
             txt.setText("");
 
         txt = (TextView) findViewById(R.id.detailWineStyle);
         txt.setText("");
         if (null != lastResult.wineStyle) {
-            txt.setText("Wine Style is " + Html.fromHtml(lastResult.wineStyle));
+            txt.setText( Html.fromHtml("<b>Style</b> is " + Html.fromHtml(lastResult.wineStyle)));
         }
 
         txt = (TextView) findViewById(R.id.detailItemDescription);

@@ -47,8 +47,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/detailImage"
-                    android:minHeight="127dp"
-                    android:minWidth="143dp" />
+                    android:minHeight="240dp"
+                    android:minWidth="240dp"
+                    android:clickable="true" />
 
                 <LinearLayout
                     android:orientation="vertical"
@@ -74,7 +75,6 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textAppearance="?android:attr/textAppearanceMedium"
                         android:text="$ 24.95"
                         android:id="@+id/detailPrice"
                         android:layout_alignTop="@+id/textView"
@@ -82,6 +82,15 @@
                         android:paddingBottom="1dp"
                         android:layout_toRightOf="@+id/textView" />
                 </RelativeLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="1234"
+                    android:paddingTop="1dp"
+                    android:paddingBottom="1dp"
+                    android:id="@+id/detailProductNumber"
+                    android:textIsSelectable="true" />
 
                 <TextView
                     android:layout_width="wrap_content"
