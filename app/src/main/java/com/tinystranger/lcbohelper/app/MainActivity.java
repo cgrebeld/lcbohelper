@@ -7,6 +7,8 @@ import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.Loader;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -35,7 +37,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
-public class MainActivity extends FragmentActivity implements View.OnClickListener
+public class MainActivity extends FragmentActivity
+        implements View.OnClickListener, LoaderManager.LoaderCallbacks<List<LCBOEntity>>
 {
     private LocationClient mLocationClient = null;
     public static Location mCurrentLocation = null;
@@ -253,16 +256,41 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
             //toast.show();
             Log.d("scan",scanFormat + ":" + scanContent );
             // UPC_A:876153000026
-            LCBOEntity item = new LCBOEntity();
-            item.itemNumber = scanContent;
-            ProductDetailActivity.lastResult = item;
+
             if (null == defaultThumbnail) {
                 defaultThumbnail = BitmapFactory.decodeResource(getResources(),
                         R.drawable.default_thumbnail);
             }
             ProductDetailActivity.lastBitmap = defaultThumbnail;
-            Intent i = new Intent(getApplicationContext(),ProductDetailActivity.class);
+
+            Bundle args = new Bundle();
+            String url = String.format(
+                    "http://stage.lcbo.com/lcbo-webapp/productdetail.do?itemNumber=%s"
+                    , scanContent);
+            args.putString("url", url);
+            Loader loader = getSupportLoaderManager().initLoader(0, args, this);
+            // call forceLoad() to start processing
+            loader.forceLoad();
+        }
+    }
+
+    @Override
+    public Loader<List<LCBOEntity>> onCreateLoader(int id, Bundle args) {
+        return new LCBOXmlLoader(this, args, LCBOQueryParser.QueryType.kProducts);
+    }
+
+    @Override
+    public void onLoadFinished(Loader<List<LCBOEntity>> loader, List<LCBOEntity> data) {
+        if (data  != null && !data.isEmpty()) {
+            ProductDetailActivity.lastResult = data.get(0);
+
+            Intent i = new Intent(getApplicationContext(), ProductDetailActivity.class);
             startActivity(i);
         }
+    }
+
+    @Override
+    public void onLoaderReset(Loader<List<LCBOEntity>> loader) {
+
     }
 }

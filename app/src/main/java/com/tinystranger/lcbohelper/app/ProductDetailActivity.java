@@ -11,6 +11,7 @@ import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.LoaderManager;
+import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
 import android.os.Bundle;
 import android.support.v4.view.MenuItemCompat;
@@ -145,10 +146,9 @@ public class ProductDetailActivity extends ActionBarActivity
         // Prepare the loader.  Either re-connect with an existing one,
         // or start a new one.
         Bundle args = new Bundle();
-        String search = lastResult.itemNumber;
         String url = String.format(
-                "http://stage.lcbo.com/lcbo-webapp/productdetail.do?itemNumber=%s"
-                , search);
+                "http://lcboapi.com/products/%s"
+                , lastResult.itemNumber);
         args.putString("url", url);
 
         loaded = false;
@@ -198,10 +198,12 @@ public class ProductDetailActivity extends ActionBarActivity
     };
 
     // Called when a new Loader needs to be created
-    public LCBOXmlLoader onCreateLoader(int id, Bundle args) {
+    public AsyncTaskLoader<List<LCBOEntity>> onCreateLoader(int id, Bundle args) {
 
-        BitmapWorkerTask task = new BitmapWorkerTask(this, lastResult.itemNumber);
-        task.execute(lastResult.itemNumber);
+        if (lastResult.image_thumb_url == null || lastResult.image_thumb_url.isEmpty()) {
+            BitmapWorkerTask task = new BitmapWorkerTask(this, lastResult.itemNumber);
+            task.execute(lastResult.itemNumber);
+        }
 
         if (MainActivity.mCurrentLocation != null)
         {
@@ -235,16 +237,16 @@ public class ProductDetailActivity extends ActionBarActivity
             locTask.execute(MainActivity.mCurrentLocation);
         }
 
-        return new LCBOXmlLoader(this, args, LCBOQueryParser.QueryType.kProducts);
+        return new LCBOAPILoader(this, args, LCBOAPIParser.QueryType.kProductDetail);
     }
 
     @Override
     public void onLoadFinished(Loader<List<LCBOEntity>> loader, List<LCBOEntity> data) {
         loaded = true;
-        if (data.size() > 0)
+        if (data != null && data.size() > 0) {
             lastResult = data.get(0);
-        else
-        {
+            updateData();
+        } else {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setMessage("No matching products found!")
                     .setTitle("Sorry");
@@ -256,10 +258,6 @@ public class ProductDetailActivity extends ActionBarActivity
             });
             builder.show();
         }
-
-        // already updated with prior data
-        // updateData();
-
         //AppRater.app_launched(getApplicationContext());
     }
 
@@ -327,6 +325,12 @@ public class ProductDetailActivity extends ActionBarActivity
         txt.setText("");
         if (null != lastResult.wineStyle) {
             txt.setText( Html.fromHtml("<b>Style</b> is " + Html.fromHtml(lastResult.wineStyle)));
+        }
+
+        txt = (TextView) findViewById(R.id.detailServingSuggestion);
+        txt.setText("");
+        if (null != lastResult.serving_suggestion) {
+            txt.setText(Html.fromHtml("<b>Pairing:</b> " + lastResult.serving_suggestion));
         }
 
         txt = (TextView) findViewById(R.id.detailItemDescription);

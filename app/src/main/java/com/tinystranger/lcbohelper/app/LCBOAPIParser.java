@@ -245,6 +245,7 @@ public class LCBOAPIParser {
             "}";
     public enum QueryType {
         kProducts,
+        kProductDetail,
         kStores
     }
 
@@ -259,7 +260,12 @@ public class LCBOAPIParser {
         while (reader.hasNext()) {
             String topName = reader.nextName();
             if (topName.equals("result")) {
-                reader.beginArray();
+                try {
+                    if (reader.peek() == JsonToken.BEGIN_ARRAY)
+                        reader.beginArray();
+                } catch (IllegalStateException e) {
+                    // pass
+                }
                 while (reader.hasNext()) {
                     reader.beginObject();
                     LCBOEntity entity = new LCBOEntity();
@@ -272,7 +278,7 @@ public class LCBOAPIParser {
                                 entity.itemNumber = String.valueOf(reader.nextInt());
                             } else if (name.equals("name")) {
                                 entity.itemName = reader.nextString();
-                            } else if (name.equals("volume_in_milliliters")) {
+                            } else if (name.equals("package_unit_volume_in_milliliters")) {
                                 entity.productSize = String.valueOf(reader.nextInt()) + " mL";
                             } else if (name.equals("stock_type")) {
                                 entity.stock_type = reader.nextString();
@@ -339,7 +345,12 @@ public class LCBOAPIParser {
                     reader.endObject();
                     entityList.add(entity);
                 }
-                reader.endArray();
+                try {
+                    if (reader.peek() == JsonToken.END_ARRAY)
+                        reader.endArray();
+                } catch (IllegalStateException e) {
+                    // pass
+                }
 
             } else {
                 reader.skipValue();
