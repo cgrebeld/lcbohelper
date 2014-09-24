@@ -44,7 +44,8 @@ public class MainActivity extends FragmentActivity
     public static Location mCurrentLocation = null;
     public static List<LCBOEntity> stores = null;
     static Bitmap defaultThumbnail = null;
-
+    static final double defaultLatitude = 43.64919634;
+    static final double  defaultLongitude = -79.37793732;
     class CompletionFetcher
     {
         private InputStream downloadUrl(String urlString) throws IOException {
@@ -200,6 +201,16 @@ public class MainActivity extends FragmentActivity
                     @Override
                     public void onConnectionFailed(ConnectionResult connectionResult) {
                         Log.d("Location", "onConnectionFailed");
+                        mCurrentLocation = new Location("");
+                        mCurrentLocation.setLatitude(defaultLatitude);
+                        mCurrentLocation.setLongitude(defaultLongitude);
+                        LocationFetchTask task = new LocationFetchTask(mCurrentLocation, null, new LocationFetchTask.LocationListener() {
+                            @Override
+                            public void onLocationsFetched(List<LCBOEntity> locations) {
+                                MainActivity.stores = locations;
+                            }
+                        });
+                        task.execute(mCurrentLocation);
                     }
                 });
     }

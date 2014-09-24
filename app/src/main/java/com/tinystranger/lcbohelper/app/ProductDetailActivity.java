@@ -124,11 +124,13 @@ public class ProductDetailActivity extends ActionBarActivity
     boolean loaded;
     public static LCBOEntity lastResult;
     public static Bitmap lastBitmap;
+    private static List<LCBOEntity> lastLocations;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.fragment_product_detail);
+
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         ImageView view = (ImageView) findViewById(R.id.detailImage);
@@ -138,26 +140,30 @@ public class ProductDetailActivity extends ActionBarActivity
 
         updateData();
 
-        spinner = (ProgressBar)findViewById(R.id.storesProgressBar);
+        spinner = (ProgressBar) findViewById(R.id.storesProgressBar);
         spinner.setVisibility(View.GONE);
 
         updateData();
 
-        // Prepare the loader.  Either re-connect with an existing one,
-        // or start a new one.
-        Bundle args = new Bundle();
-        String url = String.format(
-                "http://lcboapi.com/products/%s"
-                , lastResult.itemNumber);
-        args.putString("url", url);
+        if (savedInstanceState == null) {
+            // Prepare the loader.  Either re-connect with an existing one,
+            // or start a new one.
+            Bundle args = new Bundle();
+            String url = String.format(
+                    "http://lcboapi.com/products/%s"
+                    , lastResult.itemNumber);
+            args.putString("url", url);
 
-        loaded = false;
+            loaded = false;
 
-        Loader loader = getSupportLoaderManager().initLoader(0, args, this);
-        // call forceLoad() to start processing
-        loader.forceLoad();
-
-
+            Loader loader = getSupportLoaderManager().initLoader(0, args, this);
+            // call forceLoad() to start processing
+            loader.forceLoad();
+        } else {
+            if (lastLocations != null && !lastLocations.isEmpty()) {
+                addLastLocationsData();
+            }
+        }
     }
 
     // Launcher for location details
@@ -211,26 +217,8 @@ public class ProductDetailActivity extends ActionBarActivity
             LocationFetchTask locTask = new LocationFetchTask(MainActivity.mCurrentLocation, lastResult.itemNumber, new LocationFetchTask.LocationListener() {
                 @Override
                 public void onLocationsFetched(List<LCBOEntity> locations) {
-                    if (locations != null)
-                    {
-                        LayoutInflater inflater = getLayoutInflater();
-                        LinearLayout parent = (LinearLayout)findViewById(R.id.detailStoresLayout);
-                        for(LCBOEntity item : locations) {
-                            View row = inflater.inflate(R.layout.detail_location_result_row,
-                                    parent, false);
-
-                            TextView txt = (TextView) row.findViewById(R.id.locationName);
-                            txt.setText(item.locationName);
-                            txt = (TextView) row.findViewById(R.id.locationQuantity);
-                            txt.setText(String.valueOf(item.productQuantity) + " Available");
-                            txt = (TextView) row.findViewById(R.id.locationAddress1);
-                            txt.setText(item.locationAddress1);
-                            txt = (TextView) row.findViewById(R.id.locationDistance);
-                            txt.setText(String.valueOf(item.distance) + " km Away");
-                            row.setOnClickListener(new BtnHandler(item));
-                            parent.addView(row);
-                        }
-                    }
+                    lastLocations = locations;
+                    addLastLocationsData();
                     spinner.setVisibility(View.GONE);
                 }
             });
@@ -238,6 +226,30 @@ public class ProductDetailActivity extends ActionBarActivity
         }
 
         return new LCBOAPILoader(this, args, LCBOAPIParser.QueryType.kProductDetail);
+    }
+
+    void addLastLocationsData()
+    {
+        if (lastLocations != null)
+        {
+            LayoutInflater inflater = getLayoutInflater();
+            LinearLayout parent = (LinearLayout)findViewById(R.id.detailStoresLayout);
+            for(LCBOEntity item : lastLocations) {
+                View row = inflater.inflate(R.layout.detail_location_result_row,
+                        parent, false);
+
+                TextView txt = (TextView) row.findViewById(R.id.locationName);
+                txt.setText(item.locationName);
+                txt = (TextView) row.findViewById(R.id.locationQuantity);
+                txt.setText(String.valueOf(item.productQuantity) + " Available");
+                txt = (TextView) row.findViewById(R.id.locationAddress1);
+                txt.setText(item.locationAddress1);
+                txt = (TextView) row.findViewById(R.id.locationDistance);
+                txt.setText(String.valueOf(item.distance) + " km Away");
+                row.setOnClickListener(new BtnHandler(item));
+                parent.addView(row);
+            }
+        }
     }
 
     @Override
