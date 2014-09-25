@@ -83,6 +83,27 @@
                         android:layout_toRightOf="@+id/textView" />
                 </RelativeLayout>
 
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="fill_parent"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        android:text="Your Rating"
+                        android:id="@+id/textView"
+                        android:gravity="left|center_vertical" />
+
+                    <RatingBar
+                        android:layout_width="wrap_content"
+                        android:layout_height="fill_parent"
+                        android:numStars="5"
+                        android:stepSize="1.0"
+                        android:id="@+id/detailRatingBar" />
+                </LinearLayout>
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

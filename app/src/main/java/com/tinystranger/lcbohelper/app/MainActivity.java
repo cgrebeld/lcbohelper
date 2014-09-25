@@ -1,5 +1,6 @@
 package com.tinystranger.lcbohelper.app;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -22,6 +23,11 @@ import com.google.android.gms.location.LocationClient;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.HashMap;
 import java.util.List;
 
 public class MainActivity extends FragmentActivity
@@ -33,11 +39,18 @@ public class MainActivity extends FragmentActivity
     static Bitmap defaultThumbnail = null;
     static final double defaultLatitude = 43.64919634;
     static final double  defaultLongitude = -79.37793732;
+    static HashMap<String, Float> RatingsHashMap;
+    static MainActivity instance;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.fragment_main);
+
+        instance = this;
+        if (RatingsHashMap == null) {
+            readRatings();
+        }
 
         final AutoCompleteTextView editText = (AutoCompleteTextView) findViewById(R.id.productSearchEditText);
 
@@ -95,6 +108,32 @@ public class MainActivity extends FragmentActivity
                         task.execute(mCurrentLocation);
                     }
                 });
+    }
+
+    public void readRatings()
+    {
+        try {
+            FileInputStream fileInputStream = openFileInput("ratings.bin");
+            ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
+            RatingsHashMap = (HashMap) objectInputStream.readObject();
+            objectInputStream.close();
+        } catch (Exception e) {
+            RatingsHashMap = new HashMap<String, Float>();
+            e.printStackTrace();
+        }
+    }
+
+    public void writeRatings()
+    {
+        try {
+            FileOutputStream fos = openFileOutput("ratings.bin", Context.MODE_PRIVATE);
+            ObjectOutputStream s = new ObjectOutputStream(fos);
+            while (RatingsHashMap.values().remove(0.0f)) {}
+            s.writeObject(RatingsHashMap);
+            s.close();
+        } catch (Exception e) {
+
+        }
     }
 
     public void doSearch(View view) {

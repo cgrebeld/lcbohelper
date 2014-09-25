@@ -9,7 +9,6 @@ import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
@@ -27,6 +26,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.RatingBar;
 import android.widget.TextView;
 
 import java.io.FileNotFoundException;
@@ -201,7 +201,7 @@ public class ProductDetailActivity extends ActionBarActivity
                 otherThumb = currentThumb;
             }
         }
-    };
+    }
 
     // Called when a new Loader needs to be created
     public AsyncTaskLoader<List<LCBOEntity>> onCreateLoader(int id, Bundle args) {
@@ -351,6 +351,19 @@ public class ProductDetailActivity extends ActionBarActivity
             txt.setText(Html.fromHtml(lastResult.itemDescription));
         }
 
+        RatingBar bar = (RatingBar)findViewById(R.id.detailRatingBar);
+        if (MainActivity.RatingsHashMap != null && MainActivity.RatingsHashMap.containsKey(lastResult.itemNumber)) {
+            bar.setRating(MainActivity.RatingsHashMap.get(lastResult.itemNumber));
+        }
+        bar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
+            @Override
+            public void onRatingChanged(RatingBar ratingBar, float v, boolean fromUser) {
+                if (fromUser) {
+                    MainActivity.RatingsHashMap.put(lastResult.itemNumber, v);
+                    MainActivity.instance.writeRatings();
+                }
+            }
+        });
     }
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu items for use in the action bar
