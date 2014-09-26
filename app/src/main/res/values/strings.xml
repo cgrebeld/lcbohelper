@@ -10,5 +10,6 @@
     <string name="xml_error">XML Error</string>
     <string name="title_activity_product_detail">Product Details</string>
     <string name="title_activity_location_detail">Location Details</string>
+    <string name="title_activity_favorites">Rated Drinks</string>
 
 </resources>

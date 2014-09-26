@@ -51,6 +51,12 @@
             android:text="Scan a Barcode"
             android:id="@+id/buttonScanBarcode" />
 
+        <Button
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="Rated Drinks"
+            android:id="@+id/buttonFavorites" />
+
     </LinearLayout>
 
 </RelativeLayout>

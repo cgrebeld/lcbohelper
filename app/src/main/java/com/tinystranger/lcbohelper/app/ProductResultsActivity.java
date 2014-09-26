@@ -1,54 +1,36 @@
 package com.tinystranger.lcbohelper.app;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import android.os.AsyncTask;
+import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
-import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.LinearLayout.LayoutParams;
+import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.URL;
-
-import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.HashMap;
-import java.util.concurrent.Semaphore;
 
 public class ProductResultsActivity extends ActionBarActivity
         implements LoaderManager.LoaderCallbacks<List<LCBOEntity>>
 {
-    static Bitmap defaultThumbnail = null;
-    static HashMap<String, Bitmap> thumbnailCache = new HashMap<String, Bitmap>();
-    private final Semaphore bitmapDownloadSemaphore = new Semaphore(3, true);
     boolean loaded;
 
     private class CustomListAdapter extends ArrayAdapter<LCBOEntity> {
@@ -64,21 +46,28 @@ public class ProductResultsActivity extends ActionBarActivity
         @Override
         public View getView(int position, View convertView, ViewGroup parent)
         {
+            if (convertView == null) {
+                convertView = getLayoutInflater().inflate(R.layout.product_result_row,
+                        parent, false);
+            }
+            View row = convertView;
             //Log.d("db", "getView " + position);
+            /*
             LayoutInflater inflater = getLayoutInflater();
             View row = inflater.inflate(R.layout.product_result_row,
                     parent, false);
-
+*/
             LCBOEntity item = getItem(position);
             ImageView view = (ImageView)row.findViewById(R.id.productImage);
-            if (!thumbnailCache.containsKey(item.itemNumber)) {
+            if (!Utils.thumbnailCache.containsKey(item.itemNumber)) {
                 BitmapWorkerTask task = new BitmapWorkerTask(activity, item, position);
                 task.execute(item.itemNumber);
                 //activity.tasks.add(task);
-                view.setImageBitmap(defaultThumbnail);
+                view.setImageBitmap(Utils.getDefaultThumbnail(activity));
+                Utils.thumbnailCache.put(item.itemNumber,Utils.getDefaultThumbnail(activity));
             } else {
-                view.setImageBitmap(thumbnailCache.get(item.itemNumber));
-                scaleImage(view);
+                view.setImageBitmap(Utils.thumbnailCache.get(item.itemNumber));
+                Utils.scaleImage(view);
             }
             TextView txt = (TextView) row.findViewById(R.id.productName);
             txt.setText(item.itemName);
@@ -89,57 +78,6 @@ public class ProductResultsActivity extends ActionBarActivity
             txt = (TextView) row.findViewById(R.id.price);
             txt.setText(item.price);
             return row;
-        }
-    }
-
-    class BitmapWorkerTask extends AsyncTask<String, Void, Bitmap> {
-        ProductResultsActivity activity;
-        LCBOEntity item;
-        int position;
-
-        public BitmapWorkerTask(ProductResultsActivity aActivity, LCBOEntity aItem, int position) {
-            activity = aActivity;
-            item = aItem;
-            this.position = position;
-        }
-
-        // Decode image in background.
-        @Override
-        protected Bitmap doInBackground(String... params) {
-            Bitmap bm = null;
-            synchronized (activity) {
-                try {
-                    bitmapDownloadSemaphore.acquire();
-                    Log.d("db", "Fetch " + params[0]);
-                    bm = fetchThumbnail(item);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } finally {
-                    bitmapDownloadSemaphore.release();
-                }
-            }
-            return bm;
-        }
-
-        // Once complete, see if ImageView is still around and set bitmap.
-        @Override
-        protected void onPostExecute(Bitmap bitmap) {
-            // Use a WeakReference to ensure the ImageView can be garbage collected
-            ListView lv = (ListView)findViewById(R.id.productResultListView);
-            View row = lv.getChildAt(position);
-            if (row != null) {
-                ImageView view = (ImageView) row.findViewById(R.id.productImage);
-                if (view != null) {
-                    if (bitmap != null) {
-                        view.setImageBitmap(bitmap);
-                        scaleImage(view);
-                        thumbnailCache.put(item.itemNumber, bitmap);
-                        Log.d("db", "Fetch ok");
-                    } else {
-                        thumbnailCache.put(item.itemNumber, defaultThumbnail);
-                    }
-                }
-            }
         }
     }
 
@@ -169,11 +107,7 @@ public class ProductResultsActivity extends ActionBarActivity
         mAdapter = new CustomListAdapter(this, this, R.layout.product_result_row, new ArrayList<LCBOEntity>());
 
         ((ListView)findViewById(R.id.productResultListView)).setAdapter(mAdapter);
-
-        if (null == defaultThumbnail) {
-            defaultThumbnail = BitmapFactory.decodeResource(getResources(),
-                    R.drawable.default_thumbnail);
-        }
+        final Activity me = this;
 
         ((ListView)findViewById(R.id.productResultListView)).setOnItemClickListener(new
                 AdapterView.OnItemClickListener() {
@@ -181,9 +115,9 @@ public class ProductResultsActivity extends ActionBarActivity
                     public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
                         LCBOEntity item = mAdapter.getItem(position);
                         ProductDetailActivity.lastResult = item;
-                        ProductDetailActivity.lastBitmap = thumbnailCache.get(item.itemNumber);
+                        ProductDetailActivity.lastBitmap = Utils.thumbnailCache.get(item.itemNumber);
                         if (ProductDetailActivity.lastBitmap == null)
-                            ProductDetailActivity.lastBitmap = defaultThumbnail;
+                            ProductDetailActivity.lastBitmap = Utils.getDefaultThumbnail(me);
                         Intent i = new Intent(getApplicationContext(),ProductDetailActivity.class);
                         startActivity(i);
                     }
@@ -258,63 +192,6 @@ public class ProductResultsActivity extends ActionBarActivity
             builder.show();
 
         }
-    }
-
-    private Bitmap fetchThumbnail(LCBOEntity aEntity)
-    {
-        String url;
-        if (aEntity.image_thumb_url == null) {
-            url = String.format(
-                    "http://lcbo.com/assets/products/40x40/%07d.jpg"
-                    , Integer.parseInt(aEntity.itemNumber));
-        } else {
-            url = aEntity.image_thumb_url;
-        }
-        Bitmap bm = null;
-        try {
-            URLConnection connection = new URL(url).openConnection();
-            connection.setConnectTimeout(1500);
-            connection.setReadTimeout(1500);
-            bm = BitmapFactory.decodeStream(connection.getInputStream());
-        } catch (FileNotFoundException e) {
-            Log.d("db", "Fetch failed");
-        }catch (IOException e) {
-            e.printStackTrace();
-        }
-        return bm;
-    }
-
-    private void scaleImage(ImageView view)
-    {
-        Drawable drawing = view.getDrawable();
-        if (drawing == null) {
-            return;
-        }
-        Bitmap bitmap = ((BitmapDrawable)drawing).getBitmap();
-
-        int width = bitmap.getWidth();
-        int height = bitmap.getHeight();
-        int bounding_x = 54;
-        int bounding_y = 54;
-
-        float xScale = ((float) bounding_x) / width;
-        float yScale = ((float) bounding_y) / height;
-
-        Matrix matrix = new Matrix();
-        matrix.postScale(xScale, yScale);
-
-        Bitmap scaledBitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height, matrix, true);
-        width = scaledBitmap.getWidth();
-        height = scaledBitmap.getHeight();
-        BitmapDrawable result = new BitmapDrawable(getResources(), scaledBitmap);
-
-        view.setImageDrawable(result);
-/*
-        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) view.getLayoutParams();
-        params.width = width;
-        params.height = height;
-        view.setLayoutParams(params);
-*/
     }
 
     @Override
