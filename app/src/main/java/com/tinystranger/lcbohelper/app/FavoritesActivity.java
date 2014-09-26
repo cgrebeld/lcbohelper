@@ -2,17 +2,21 @@ package com.tinystranger.lcbohelper.app;
 
 import android.app.Activity;
 import android.content.Context;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
-import android.view.LayoutInflater;
+import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.RatingBar;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 
@@ -31,31 +35,42 @@ public class FavoritesActivity extends ActionBarActivity {
         @Override
         public View getView(int position, View convertView, ViewGroup parent)
         {
-            //Log.d("db", "getView " + position);
-            LayoutInflater inflater = getLayoutInflater();
-            View row = inflater.inflate(R.layout.product_result_row,
-                    parent, false);
+            if (convertView == null) {
+                convertView = getLayoutInflater().inflate(R.layout.favorites_row,
+                        parent, false);
+            }
+            View row = convertView;
 
             LCBOEntity item = getItem(position);
             ImageView view = (ImageView)row.findViewById(R.id.productImage);
             if (!Utils.thumbnailCache.containsKey(item.itemNumber)) {
                 BitmapWorkerTask task = new BitmapWorkerTask(activity, item, position);
                 task.execute(item.itemNumber);
-                //activity.tasks.add(task);
-                view.setImageBitmap( Utils.getDefaultThumbnail(activity));
+
+                view.setImageBitmap(Utils.getDefaultThumbnail(activity));
+                Utils.thumbnailCache.put(item.itemNumber,Utils.getDefaultThumbnail(activity));
             } else {
                 view.setImageBitmap(Utils.thumbnailCache.get(item.itemNumber));
                 Utils.scaleImage(view);
             }
             TextView txt = (TextView) row.findViewById(R.id.productName);
             txt.setText(item.itemName);
-            txt = (TextView) row.findViewById(R.id.quantity);
-            txt.setText(String.valueOf(item.productQuantity) + " Available");
+            RatingBar bar = (RatingBar) row.findViewById(R.id.favoriteRatingBar);
+            bar.setRating(item.userRating);
             txt = (TextView) row.findViewById(R.id.volume);
             txt.setText(item.productSize);
             txt = (TextView) row.findViewById(R.id.price);
             txt.setText(item.price);
             return row;
+        }
+    }
+
+    CustomListAdapter mAdapter;
+
+    public class CustomComparator implements Comparator<LCBOEntity> {
+        @Override
+        public int compare(LCBOEntity o1, LCBOEntity o2) {
+            return (int)Math.floor(o2.userRating - o1.userRating);
         }
     }
 
@@ -65,6 +80,17 @@ public class FavoritesActivity extends ActionBarActivity {
         setContentView(R.layout.fragment_favorites);
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        mAdapter = new CustomListAdapter(this, this, R.layout.favorites_row, new ArrayList<LCBOEntity>());
+        ((ListView)findViewById(R.id.favoritesList)).setAdapter(mAdapter);
+
+        // fill the list
+        ArrayList<LCBOEntity> Favs = new ArrayList<LCBOEntity>(MainActivity.RatingsHashMap.values());
+        Collections.sort(Favs, new CustomComparator());
+        for (LCBOEntity el : Favs) {
+            if (el.userRating > 0)
+                mAdapter.add(el);
+        }
     }
 
 

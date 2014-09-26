@@ -39,7 +39,7 @@ public class MainActivity extends FragmentActivity
     static Bitmap defaultThumbnail = null;
     static final double defaultLatitude = 43.64919634;
     static final double  defaultLongitude = -79.37793732;
-    static HashMap<String, Float> RatingsHashMap;
+    static HashMap<String, LCBOEntity> RatingsHashMap;
     static MainActivity instance;
 
     @Override
@@ -113,12 +113,12 @@ public class MainActivity extends FragmentActivity
     public void readRatings()
     {
         try {
-            FileInputStream fileInputStream = openFileInput("ratings.bin");
+            FileInputStream fileInputStream = openFileInput("ratings.ser");
             ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
             RatingsHashMap = (HashMap) objectInputStream.readObject();
             objectInputStream.close();
         } catch (Exception e) {
-            RatingsHashMap = new HashMap<String, Float>();
+            RatingsHashMap = new HashMap<String, LCBOEntity>();
             e.printStackTrace();
         }
     }
@@ -126,9 +126,8 @@ public class MainActivity extends FragmentActivity
     public void writeRatings()
     {
         try {
-            FileOutputStream fos = openFileOutput("ratings.bin", Context.MODE_PRIVATE);
+            FileOutputStream fos = openFileOutput("ratings.ser", Context.MODE_PRIVATE);
             ObjectOutputStream s = new ObjectOutputStream(fos);
-            while (RatingsHashMap.values().remove(0.0f)) {}
             s.writeObject(RatingsHashMap);
             s.close();
         } catch (Exception e) {
@@ -147,6 +146,11 @@ public class MainActivity extends FragmentActivity
             i.putExtra("search", search);
             startActivity(i);
         }
+    }
+
+    public void doFavorites(View view) {
+        Intent i = new Intent(getApplicationContext(),FavoritesActivity.class);
+        startActivity(i);
     }
 
     @Override

@@ -35,8 +35,8 @@ public class ProductResultsActivity extends ActionBarActivity
 
     private class CustomListAdapter extends ArrayAdapter<LCBOEntity> {
 
-        ProductResultsActivity activity;
-        public CustomListAdapter(ProductResultsActivity activity, Context context, int textViewResourceId,
+        Activity activity;
+        public CustomListAdapter(Activity activity, Context context, int textViewResourceId,
                                  List<LCBOEntity> objects) {
             super(context, textViewResourceId, objects);
             this.notifyDataSetChanged();
@@ -51,18 +51,13 @@ public class ProductResultsActivity extends ActionBarActivity
                         parent, false);
             }
             View row = convertView;
-            //Log.d("db", "getView " + position);
-            /*
-            LayoutInflater inflater = getLayoutInflater();
-            View row = inflater.inflate(R.layout.product_result_row,
-                    parent, false);
-*/
+
             LCBOEntity item = getItem(position);
             ImageView view = (ImageView)row.findViewById(R.id.productImage);
             if (!Utils.thumbnailCache.containsKey(item.itemNumber)) {
                 BitmapWorkerTask task = new BitmapWorkerTask(activity, item, position);
                 task.execute(item.itemNumber);
-                //activity.tasks.add(task);
+
                 view.setImageBitmap(Utils.getDefaultThumbnail(activity));
                 Utils.thumbnailCache.put(item.itemNumber,Utils.getDefaultThumbnail(activity));
             } else {

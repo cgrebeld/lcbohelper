@@ -1,9 +1,11 @@
 package com.tinystranger.lcbohelper.app;
 
+import java.io.Serializable;
+
 /**
  * Created by chris on 5/5/2014.
  */
-public class LCBOEntity {
+public class LCBOEntity implements Serializable{
     public boolean isLocation;
 
     public String itemNumber;
@@ -55,4 +57,5 @@ public class LCBOEntity {
     public String image_thumb_url;
     public String image_url;
     public String serving_suggestion;
+    public float userRating;
 }
