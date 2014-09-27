@@ -352,21 +352,21 @@ public class ProductDetailActivity extends ActionBarActivity
         }
 
         RatingBar bar = (RatingBar)findViewById(R.id.detailRatingBar);
-        if (MainActivity.RatingsHashMap != null && MainActivity.RatingsHashMap.containsKey(lastResult.itemNumber)) {
-            bar.setRating(MainActivity.RatingsHashMap.get(lastResult.itemNumber).userRating);
+        if (Utils.RatingsHashMap != null && Utils.RatingsHashMap.containsKey(lastResult.itemNumber)) {
+            bar.setRating(Utils.RatingsHashMap.get(lastResult.itemNumber).userRating);
         }
         bar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
             @Override
             public void onRatingChanged(RatingBar ratingBar, float v, boolean fromUser) {
                 if (fromUser) {
-                    if (MainActivity.RatingsHashMap.containsKey(lastResult.itemNumber)) {
-                        LCBOEntity Ent = MainActivity.RatingsHashMap.get(lastResult.itemNumber);
+                    if (Utils.RatingsHashMap.containsKey(lastResult.itemNumber)) {
+                        LCBOEntity Ent = Utils.RatingsHashMap.get(lastResult.itemNumber);
                         Ent.userRating = v;
                     } else {
                         lastResult.userRating = v;
-                        MainActivity.RatingsHashMap.put(lastResult.itemNumber, lastResult);
+                        Utils.RatingsHashMap.put(lastResult.itemNumber, lastResult);
                     }
-                    MainActivity.instance.writeRatings();
+                    Utils.writeRatings(ProductDetailActivity.this);
                 }
             }
         });

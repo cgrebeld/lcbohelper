@@ -19,12 +19,14 @@ class BitmapWorkerTask extends AsyncTask<String, Void, Bitmap> {
     Activity activity;
     LCBOEntity item;
     int position;
+    int listViewId;
     private static Semaphore bitmapDownloadSemaphore = new Semaphore(3, true);
 
-    public BitmapWorkerTask(Activity aActivity, LCBOEntity aItem, int position) {
+    public BitmapWorkerTask(Activity aActivity, LCBOEntity aItem, int position, int aListViewId) {
         activity = aActivity;
         item = aItem;
         this.position = position;
+        listViewId = aListViewId;
         Log.d("LCB", "BitmapWorkerTask ctor" + position);
     }
 
@@ -50,7 +52,7 @@ class BitmapWorkerTask extends AsyncTask<String, Void, Bitmap> {
     @Override
     protected void onPostExecute(Bitmap bitmap) {
         // Use a WeakReference to ensure the ImageView can be garbage collected
-        ListView lv = (ListView)activity.findViewById(R.id.productResultListView);
+        ListView lv = (ListView)activity.findViewById(listViewId);
         int visibleIndex = position - lv.getFirstVisiblePosition();
         View row = lv.getChildAt(visibleIndex);
         if (row != null) {

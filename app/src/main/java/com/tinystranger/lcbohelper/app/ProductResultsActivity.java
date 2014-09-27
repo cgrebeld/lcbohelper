@@ -55,7 +55,7 @@ public class ProductResultsActivity extends ActionBarActivity
             LCBOEntity item = getItem(position);
             ImageView view = (ImageView)row.findViewById(R.id.productImage);
             if (!Utils.thumbnailCache.containsKey(item.itemNumber)) {
-                BitmapWorkerTask task = new BitmapWorkerTask(activity, item, position);
+                BitmapWorkerTask task = new BitmapWorkerTask(activity, item, position, R.id.productResultListView);
                 task.execute(item.itemNumber);
 
                 view.setImageBitmap(Utils.getDefaultThumbnail(activity));
@@ -102,7 +102,6 @@ public class ProductResultsActivity extends ActionBarActivity
         mAdapter = new CustomListAdapter(this, this, R.layout.product_result_row, new ArrayList<LCBOEntity>());
 
         ((ListView)findViewById(R.id.productResultListView)).setAdapter(mAdapter);
-        final Activity me = this;
 
         ((ListView)findViewById(R.id.productResultListView)).setOnItemClickListener(new
                 AdapterView.OnItemClickListener() {
@@ -112,7 +111,7 @@ public class ProductResultsActivity extends ActionBarActivity
                         ProductDetailActivity.lastResult = item;
                         ProductDetailActivity.lastBitmap = Utils.thumbnailCache.get(item.itemNumber);
                         if (ProductDetailActivity.lastBitmap == null)
-                            ProductDetailActivity.lastBitmap = Utils.getDefaultThumbnail(me);
+                            ProductDetailActivity.lastBitmap = Utils.getDefaultThumbnail(ProductResultsActivity.this);
                         Intent i = new Intent(getApplicationContext(),ProductDetailActivity.class);
                         startActivity(i);
                     }

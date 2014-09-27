@@ -1,13 +1,20 @@
 package com.tinystranger.lcbohelper.app;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.widget.ShareActionProvider;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -21,6 +28,8 @@ import java.util.List;
 
 
 public class FavoritesActivity extends ActionBarActivity {
+
+    private ShareActionProvider mShareActionProvider;
 
     private class CustomListAdapter extends ArrayAdapter<LCBOEntity> {
 
@@ -44,7 +53,7 @@ public class FavoritesActivity extends ActionBarActivity {
             LCBOEntity item = getItem(position);
             ImageView view = (ImageView)row.findViewById(R.id.productImage);
             if (!Utils.thumbnailCache.containsKey(item.itemNumber)) {
-                BitmapWorkerTask task = new BitmapWorkerTask(activity, item, position);
+                BitmapWorkerTask task = new BitmapWorkerTask(activity, item, position, R.id.favoritesList);
                 task.execute(item.itemNumber);
 
                 view.setImageBitmap(Utils.getDefaultThumbnail(activity));
@@ -85,34 +94,77 @@ public class FavoritesActivity extends ActionBarActivity {
         ((ListView)findViewById(R.id.favoritesList)).setAdapter(mAdapter);
 
         // fill the list
-        ArrayList<LCBOEntity> Favs = new ArrayList<LCBOEntity>(MainActivity.RatingsHashMap.values());
-        Collections.sort(Favs, new CustomComparator());
-        for (LCBOEntity el : Favs) {
-            if (el.userRating > 0)
-                mAdapter.add(el);
+        ArrayList<LCBOEntity> Favs = new ArrayList<LCBOEntity>(Utils.getRatingsHashMap(this).values());
+        if (Favs != null) {
+            Collections.sort(Favs, new CustomComparator());
+            for (LCBOEntity el : Favs) {
+                if (el.userRating > 0)
+                    mAdapter.add(el);
+            }
+        }
+
+        ((ListView)findViewById(R.id.favoritesList)).setOnItemClickListener(new
+            AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+                    LCBOEntity item = mAdapter.getItem(position);
+                    ProductDetailActivity.lastResult = item;
+                    ProductDetailActivity.lastBitmap = Utils.thumbnailCache.get(item.itemNumber);
+                    if (ProductDetailActivity.lastBitmap == null)
+                        ProductDetailActivity.lastBitmap = Utils.getDefaultThumbnail(FavoritesActivity.this);
+                    Intent i = new Intent(getApplicationContext(),ProductDetailActivity.class);
+                    startActivity(i);
+                }
+            });
+
+        if (savedInstanceState == null) {
+            if (mAdapter.getCount() == 0) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setMessage("Set a star rating on a product and it will show up here!")
+                        .setTitle("No Rated Drinks");
+                builder.setNeutralButton("Ok", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        FavoritesActivity.this.finish();
+                    }
+                });
+                builder.show();
+
+            }
         }
     }
 
-
-    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.favorites, menu);
-        return true;
+        // Inflate the menu items for use in the action bar
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.product_detail, menu);
+        // Get the menu item.
+        MenuItem menuItem = menu.findItem(R.id.action_share);
+        // Get the provider and hold onto it to set/change the share intent.
+        mShareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(menuItem);
+        mShareActionProvider.setShareIntent(getDefaultIntent());
+        return super.onCreateOptionsMenu(menu);
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+    /** Defines a default (dummy) share intent to initialize the action provider.
+     * However, as soon as the actual content to be used in the intent
+     * is known or changes, you must update the share intent by again calling
+     * mShareActionProvider.setShareIntent()
+     */
+    private Intent getDefaultIntent() {
+        String shareBody = "";
+        ArrayList<LCBOEntity> Favs = new ArrayList<LCBOEntity>(Utils.getRatingsHashMap(this).values());
+        if (Favs != null) {
+            for (LCBOEntity ent : Favs) {
+                if (ent.userRating > 0) {
+                    shareBody += ent.itemName + " (" + ent.itemNumber + ") " + ent.userRating + " stars\n";
+                }
+            }
         }
-
-        return super.onOptionsItemSelected(item);
+        Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
+        sharingIntent.setType("text/plain");
+        sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "My Favorites from LCBO Helper Android");
+        sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody);
+        return sharingIntent;
     }
 }

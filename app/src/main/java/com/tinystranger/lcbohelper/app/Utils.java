@@ -1,6 +1,7 @@
 package com.tinystranger.lcbohelper.app;
 
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
@@ -8,10 +9,15 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.widget.ImageView;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.HashMap;
 
 public class Utils {
     public static HashMap<String, Bitmap> thumbnailCache = new HashMap<String, Bitmap>();
+    static HashMap<String, LCBOEntity> RatingsHashMap;
     private static Bitmap defaultThumbnail = null;
 
     public static Bitmap getDefaultThumbnail(Activity Activity) {
@@ -22,6 +28,39 @@ public class Utils {
         return defaultThumbnail;
     }
 
+    public static HashMap<String, LCBOEntity> getRatingsHashMap(Activity Activity)
+    {
+        if (RatingsHashMap == null)
+        {
+            readRatings(Activity);
+        }
+        return RatingsHashMap;
+    }
+
+    public static void readRatings(Activity Activity)
+    {
+        try {
+            FileInputStream fileInputStream = Activity.openFileInput("ratings.ser");
+            ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
+            Utils.RatingsHashMap = (HashMap) objectInputStream.readObject();
+            objectInputStream.close();
+        } catch (Exception e) {
+            Utils.RatingsHashMap = new HashMap<String, LCBOEntity>();
+            e.printStackTrace();
+        }
+    }
+
+    public static void writeRatings(Activity Activity)
+    {
+        try {
+            FileOutputStream fos = Activity.openFileOutput("ratings.ser", Context.MODE_PRIVATE);
+            ObjectOutputStream s = new ObjectOutputStream(fos);
+            s.writeObject(Utils.RatingsHashMap);
+            s.close();
+        } catch (Exception e) {
+
+        }
+    }
     public static void scaleImage(ImageView view)
     {
         Drawable drawing = view.getDrawable();
