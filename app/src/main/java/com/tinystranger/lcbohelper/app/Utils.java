@@ -17,7 +17,7 @@ import java.util.HashMap;
 
 public class Utils {
     public static HashMap<String, Bitmap> thumbnailCache = new HashMap<String, Bitmap>();
-    static HashMap<String, LCBOEntity> RatingsHashMap;
+    private static HashMap<String, LCBOEntity> RatingsHashMap;
     private static Bitmap defaultThumbnail = null;
 
     public static Bitmap getDefaultThumbnail(Activity Activity) {
@@ -46,7 +46,6 @@ public class Utils {
             objectInputStream.close();
         } catch (Exception e) {
             Utils.RatingsHashMap = new HashMap<String, LCBOEntity>();
-            e.printStackTrace();
         }
     }
 

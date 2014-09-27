@@ -32,6 +32,7 @@ import android.widget.TextView;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.List;
 
 
@@ -352,19 +353,20 @@ public class ProductDetailActivity extends ActionBarActivity
         }
 
         RatingBar bar = (RatingBar)findViewById(R.id.detailRatingBar);
-        if (Utils.RatingsHashMap != null && Utils.RatingsHashMap.containsKey(lastResult.itemNumber)) {
-            bar.setRating(Utils.RatingsHashMap.get(lastResult.itemNumber).userRating);
+        if (Utils.getRatingsHashMap(this).containsKey(lastResult.itemNumber)) {
+            bar.setRating(Utils.getRatingsHashMap(this).get(lastResult.itemNumber).userRating);
         }
         bar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
             @Override
             public void onRatingChanged(RatingBar ratingBar, float v, boolean fromUser) {
                 if (fromUser) {
-                    if (Utils.RatingsHashMap.containsKey(lastResult.itemNumber)) {
-                        LCBOEntity Ent = Utils.RatingsHashMap.get(lastResult.itemNumber);
+                    HashMap<String, LCBOEntity> RatingsMap = Utils.getRatingsHashMap(ProductDetailActivity.this);
+                    if (RatingsMap.containsKey(lastResult.itemNumber)) {
+                        LCBOEntity Ent = RatingsMap.get(lastResult.itemNumber);
                         Ent.userRating = v;
                     } else {
                         lastResult.userRating = v;
-                        Utils.RatingsHashMap.put(lastResult.itemNumber, lastResult);
+                        RatingsMap.put(lastResult.itemNumber, lastResult);
                     }
                     Utils.writeRatings(ProductDetailActivity.this);
                 }
