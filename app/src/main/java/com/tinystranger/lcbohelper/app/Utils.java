@@ -11,9 +11,14 @@ import android.widget.ImageView;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.HashMap;
+import java.util.zip.GZIPInputStream;
 
 public class Utils {
     public static HashMap<String, Bitmap> thumbnailCache = new HashMap<String, Bitmap>();
@@ -91,5 +96,26 @@ public class Utils {
         params.height = height;
         view.setLayoutParams(params);
 */
+    }
+
+    public static InputStream downloadUrl(String urlString) throws IOException {
+        URL url = new URL(urlString);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setReadTimeout(10000 /* milliseconds */);
+        conn.setConnectTimeout(15000 /* milliseconds */);
+        conn.setRequestMethod("GET");
+        conn.setRequestProperty("User-Agent", "LCBO/2.5 CFNetwork/672.1.14 Darwin/14.0.0");
+        conn.setRequestProperty("Accept", "*/*");
+        conn.setRequestProperty("Accept-Encoding", "gzip, deflate");
+        conn.setRequestProperty("Accept-Language", "en-us");
+        conn.setDoInput(true);
+        // Starts the query
+        conn.connect();
+        InputStream stream = conn.getInputStream();
+
+        if ("gzip".equals(conn.getContentEncoding())) {
+            stream = new GZIPInputStream(stream);
+        }
+        return stream;
     }
 }

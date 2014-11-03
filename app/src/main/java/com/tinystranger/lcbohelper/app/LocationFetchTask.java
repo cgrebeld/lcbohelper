@@ -7,10 +7,7 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.List;
-import java.util.zip.GZIPInputStream;
 
 class LocationFetchTask extends AsyncTask<Location, Void, List<LCBOEntity>> {
     public interface LocationListener {
@@ -58,29 +55,12 @@ class LocationFetchTask extends AsyncTask<Location, Void, List<LCBOEntity>> {
         return result;
     }
 
-    private InputStream downloadUrl(String urlString) throws IOException {
-        URL url = new URL(urlString);
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setReadTimeout(10000 /* milliseconds */);
-        conn.setConnectTimeout(15000 /* milliseconds */);
-        conn.setRequestMethod("GET");
-        conn.setRequestProperty("User-Agent", "LCBO/2.5 CFNetwork/672.1.14 Darwin/14.0.0");
-        conn.setRequestProperty("Accept", "*/*");
-        conn.setRequestProperty("Accept-Encoding", "gzip, deflate");
-        conn.setRequestProperty("Accept-Language", "en-us");
-        conn.setDoInput(true);
-        // Starts the query
-        conn.connect();
-        InputStream stream = conn.getInputStream();
-        return stream;
-    }
-
     private List<LCBOEntity> loadXmlFromNetwork(String urlString) throws XmlPullParserException, IOException {
         InputStream stream = null;
         LCBOQueryParser parser = new LCBOQueryParser();
         List<LCBOEntity> entries = null;
         try {
-            stream = new GZIPInputStream(downloadUrl(urlString));
+            stream = Utils.downloadUrl(urlString);
 /*
             StringBuilder inputStringBuilder = new StringBuilder();
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new GZIPInputStream(stream), "UTF-8"));
