@@ -63,11 +63,9 @@ public class ProductDetailActivity extends ActionBarActivity
         protected void onPostExecute(Bitmap bitmap) {
             ImageView view = (ImageView) activity.findViewById(R.id.detailImage);
             if (view != null && bitmap != null) {
-                if (view != null) {
-                    view.setImageBitmap(bitmap);
-                    scaleImage(view);
-                    //view.setOnClickListener(new ImageClickHandler(bitmap));
-                }
+                view.setImageBitmap(bitmap);
+                scaleImage(view);
+                //view.setOnClickListener(new ImageClickHandler(bitmap));
             }
         }
         private Bitmap fetchThumbnail(String productNumber)
@@ -75,10 +73,15 @@ public class ProductDetailActivity extends ActionBarActivity
             Bitmap bm = null;
             try {
                 String url;
-                if (activity.lastResult != null &&
-                        activity.lastResult.image_thumb_url != null)
+                if (ProductDetailActivity.lastResult != null &&
+                        ProductDetailActivity.lastResult.image_url != null)
                 {
-                    url = activity.lastResult.image_thumb_url;
+                    url = ProductDetailActivity.lastResult.image_url;
+                }
+                else if (ProductDetailActivity.lastResult != null &&
+                        ProductDetailActivity.lastResult.image_thumb_url != null)
+                {
+                    url = ProductDetailActivity.lastResult.image_thumb_url;
                 } else {
                     url = String.format(
                             "http://lcbo.com/app/images/products/thumbs/%07d.jpg"
@@ -104,8 +107,8 @@ public class ProductDetailActivity extends ActionBarActivity
 
             int width = bitmap.getWidth();
             int height = bitmap.getHeight();
-            int bounding_x = 240;
-            int bounding_y = 240;
+            int bounding_x = 340;
+            int bounding_y = 340;
 
             float xScale = ((float) bounding_x) / width;
             float yScale = ((float) bounding_y) / height;
@@ -114,8 +117,6 @@ public class ProductDetailActivity extends ActionBarActivity
             matrix.postScale(yScale, yScale);
 
             Bitmap scaledBitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height, matrix, true);
-            width = scaledBitmap.getWidth();
-            height = scaledBitmap.getHeight();
             BitmapDrawable result = new BitmapDrawable(getResources(), scaledBitmap);
 
             view.setImageDrawable(result);
@@ -181,7 +182,7 @@ public class ProductDetailActivity extends ActionBarActivity
             Intent i = new Intent(getApplicationContext(),LocationDetailActivity.class);
             startActivity(i);
         }
-    };
+    }
 
     // Launcher for location details
     private class ImageClickHandler implements View.OnClickListener

@@ -47,8 +47,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:id="@+id/detailImage"
-                    android:minHeight="240dp"
-                    android:minWidth="240dp"
+                    android:minHeight="340dp"
+                    android:minWidth="340dp"
                     android:clickable="true" />
 
                 <LinearLayout
